@@ -1,106 +1,133 @@
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
-// Klasa reprezentująca pojedynczy wiersz danych z dwoma wartościami
-class Dane {
-    final int v1, v2; // v1 - pierwsza wartość (kolumna 1), v2 - druga wartość (kolumna 2)
+// Klasa reprezentująca parę liczb (dla Input 1 i Input 3)
+class Pair {
+    private final int first;
+    private final int second;
 
-    // Konstruktor tworzący obiekt Dane z dwóch wartości
-    Dane(int v1, int v2) {
-        this.v1 = v1;
-        this.v2 = v2;
+    public Pair(int first, int second) {
+        this.first = first;
+        this.second = second;
     }
 
-    // Metoda obliczająca sumę wartości w wierszu
-    int sum() { return v1 + v2; }
+    public int getFirst() {
+        return first;
+    }
 
-    // Metoda określająca, która wartość jest większa: 1 (v1), 2 (v2) lub 0 (równe)
-    int larger() { return v1 > v2 ? 1 : v2 > v1 ? 2 : 0; }
+    public int getSecond() {
+        return second;
+    }
 
-    // Nadpisywanie metody toString do formatowania danych w czytelny sposób
     @Override
     public String toString() {
-        return v1 + "\t" + v2 + "\tSuma: " + sum() + "\tWiększa: " + larger();
+        return "Pair{first=" + first + ", second=" + second + "}";
     }
 }
 
-// Klasa obsługująca operacje na plikach (odczyt i zapis)
-class FileHandler {
-    // Metoda odczytująca dane z pliku i zwracająca listę obiektów Dane
-    List<Dane> read(String file) throws IOException {
-        List<Dane> list = new ArrayList<>(); // Lista do przechowywania obiektów Dane
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) { // Automatyczne zamknięcie strumienia
+public class Main {
+    // Wczytywanie danych z Input 1 (pary liczb)
+    public static List<Pair> loadInput1(String filePath) {
+        List<Pair> data = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
-            while ((line = br.readLine()) != null) { // Pętla odczytująca linie z pliku
-                String[] parts = line.trim().split("\\s+"); // Podział linii na części (spacje/tabulacje)
-                if (parts.length == 2) { // Sprawdzenie, czy linia ma dokładnie 2 wartości
-                    list.add(new Dane(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]))); // Dodanie nowego obiektu Dane
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+                String[] parts = line.trim().split("\\s+");
+                if (parts.length >= 2) {
+                    int first = Integer.parseInt(parts[0]);
+                    int second = Integer.parseInt(parts[1]);
+                    data.add(new Pair(first, second));
                 }
             }
+        } catch (IOException e) {
+            System.err.println("Błąd wczytywania pliku " + filePath + ": " + e.getMessage());
         }
-        return list; // Zwrócenie listy danych
+        return data;
     }
 
-    // Metoda zapisująca listę obiektów Dane do pliku
-    void write(String file, List<Dane> list) throws IOException {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) { // Automatyczne zamknięcie strumienia
-            for (Dane d : list) { // Pętla po wszystkich obiektach Dane
-                bw.write(d.toString()); // Zapisanie sformatowanego ciągu
-                bw.newLine(); // Nowa linia po każdym wpisie
+    // Wczytywanie danych z Input 2 (lista liczb o zmiennej długości)
+    public static List<List<Integer>> loadInput2(String filePath) {
+        List<List<Integer>> data = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+                List<Integer> numbers = Arrays.stream(line.trim().split("\\s+"))
+                        .map(Integer::parseInt)
+                        .collect(Collectors.toList());
+                data.add(numbers);
             }
+        } catch (IOException e) {
+            System.err.println("Błąd wczytywania pliku " + filePath + ": " + e.getMessage());
         }
-    }
-}
-
-// Klasa odpowiedzialna za analizę i wyświetlanie danych
-class DataAnalyzer {
-    // Metoda wyświetlająca dane w konsoli
-    void display(List<Dane> list) {
-        System.out.println("Wczytane dane:"); // Nagłówek
-        list.forEach(System.out::println); // Wyświetlenie wszystkich obiektów Dane
+        return data;
     }
 
-    // Metoda analizująca największą i najmniejszą wartość w całym zestawie danych
-    void analyzeExtremes(List<Dane> list) {
-        if (list.isEmpty()) return; // Zakończenie, jeśli lista jest pusta
-
-        // Inicjalizacja zmiennych wartościami z pierwszego wiersza
-        int max = list.get(0).v1, min = max, maxRow = 1, minRow = 1;
-        String maxCol = "Kolumna 1", minCol = "Kolumna 1"; // Domyślne kolumny
-
-        // Pętla po wszystkich wierszach w celu znalezienia ekstremów
-        for (int i = 0; i < list.size(); i++) {
-            Dane d = list.get(i); // Pobranie bieżącego obiektu
-            int row = i + 1; // Numer wiersza (zaczynając od 1)
-
-            // Sprawdzanie maksymalnej wartości dla v1
-            if (d.v1 > max) { max = d.v1; maxCol = "Kolumna 1"; maxRow = row; }
-            // Sprawdzanie maksymalnej wartości dla v2
-            if (d.v2 > max) { max = d.v2; maxCol = "Kolumna 2"; maxRow = row; }
-            // Sprawdzanie minimalnej wartości dla v1
-            if (d.v1 < min) { min = d.v1; minCol = "Kolumna 1"; minRow = row; }
-            // Sprawdzanie minimalnej wartości dla v2
-            if (d.v2 < min) { min = d.v2; minCol = "Kolumna 2"; minRow = row; }
+    // Wczytywanie danych z Input 3 (pary lub listy liczb oddzielone | lub ,)
+    public static List<List<Integer>> loadInput3(String filePath) {
+        List<List<Integer>> data = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+                String[] parts;
+                if (line.contains("|")) {
+                    parts = line.trim().split("\\|");
+                } else {
+                    parts = line.trim().split(",");
+                }
+                List<Integer> numbers = Arrays.stream(parts)
+                        .map(String::trim)
+                        .map(Integer::parseInt)
+                        .collect(Collectors.toList());
+                data.add(numbers);
+            }
+        } catch (IOException e) {
+            System.err.println("Błąd wczytywania pliku " + filePath + ": " + e.getMessage());
         }
-
-        // Wyświetlenie wyników analizy
-        System.out.println("\nAnaliza ekstremów:");
-        System.out.println("Największa wartość: " + max + " (" + maxCol + ", wiersz " + maxRow + ")");
-        System.out.println("Najmniejsza wartość: " + min + " (" + minCol + ", wiersz " + minRow + ")");
+        return data;
     }
-}
 
-// Główna klasa programu
-public class Main {
-    public static void main(String[] args) throws IOException {
-        FileHandler fileHandler = new FileHandler(); // Obiekt do obsługi plików
-        DataAnalyzer analyzer = new DataAnalyzer(); // Obiekt do analizy danych
+    public static void main(String[] args) {
+        // Trzy różne inputy (pliki)
+        String input1Path = "input1.txt";
+        String input2Path = "input2.txt";
+        String input3Path = "input3.txt";
 
-        // Wykonanie operacji: odczyt, zapis, wyświetlenie i analiza
-        List<Dane> daneList = fileHandler.read("input.txt"); // Odczyt danych z pliku
-        fileHandler.write("output.txt", daneList); // Zapis danych do pliku
-        analyzer.display(daneList); // Wyświetlenie danych w konsoli
-        analyzer.analyzeExtremes(daneList); // Analiza ekstremów
-        System.out.println("Operacja zakończona sukcesem."); // Potwierdzenie zakończenia
+        // Wczytanie danych
+        List<Pair> data1 = loadInput1(input1Path);
+        List<List<Integer>> data2 = loadInput2(input2Path);
+        List<List<Integer>> data3 = loadInput3(input3Path);
+
+        // Wyświetlenie wczytanych danych (opcjonalne)
+        System.out.println("Dane z input1 (pierwsze 5): " + data1.subList(0, Math.min(5, data1.size())));
+        System.out.println("Dane z input2 (pierwsze 5): " + data2.subList(0, Math.min(5, data2.size())));
+        System.out.println("Dane z input3 (pierwsze 5): " + data3.subList(0, Math.min(5, data3.size())));
+
+        // Output 1: Suma wszystkich wartości (first + second) z Input 1
+        long sum1 = data1.stream()
+                .mapToLong(pair -> pair.getFirst() + pair.getSecond())
+                .sum();
+        System.out.println("Output 1 (Suma z Input 1): " + sum1);
+
+        // Output 2: Średnia wszystkich wartości z Input 2
+        double average2 = data2.stream()
+                .flatMapToInt(list -> list.stream().mapToInt(Integer::intValue))
+                .average()
+                .orElse(0.0);
+        System.out.println("Output 2 (Średnia z Input 2): " + average2);
+
+        // Output 3: Maksymalna wartość z każdej linii Input 3, a potem średnia tych maksimów
+        double maxAverage3 = data3.stream()
+                .mapToInt(list -> list.stream().mapToInt(Integer::intValue).max().orElse(Integer.MIN_VALUE))
+                .average()
+                .orElse(0.0);
+        System.out.println("Output 3 (Średnia maksimów z Input 3): " + maxAverage3);
     }
 }
